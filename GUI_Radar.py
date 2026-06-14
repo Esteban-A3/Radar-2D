@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import font as tkfont
+from PIL import Image, ImageTk, ImageEnhance
 import os
 
 
@@ -28,7 +29,10 @@ class MenuPrincipal(tk.Tk):
     def __init__(self):
         super().__init__()
         self.configurar_ventana()   
-        self.cargar_fuentes()        
+        self.cargar_fuentes()   
+        self.crear_canvas()        
+        self.dibujar_fondo()
+        self.dibujar_scanlines()     
 
 
     def configurar_ventana(self):
@@ -54,6 +58,44 @@ class MenuPrincipal(tk.Tk):
         self.f_tag       = tkfont.Font(family=FONT_FAMILY, size=8)
         self.f_status    = tkfont.Font(family=FONT_FAMILY, size=9)
         self.f_feedback  = tkfont.Font(family=FONT_FAMILY, size=10)
+
+    def crear_canvas(self):
+        """Canvas principal que ocupa toda la ventana."""
+        self.canvas = tk.Canvas(
+            self,
+            width=WINDOW_W,
+            height=WINDOW_H,
+            bg=COLOR_BG,
+            highlightthickness=0   # sin borde gris de tkinter
+        )
+        self.canvas.pack(fill="both", expand=True)
+
+    def dibujar_fondo(self):
+        """
+        Carga radar_bg.png, la escala a la ventana y reduce su brillo
+        para que sirva de textura sin tapar los elementos de la UI.
+        """
+        try:
+            img = Image.open(BG_IMAGE_PATH).convert("RGB")
+            img = img.resize((WINDOW_W, WINDOW_H), Image.LANCZOS)
+            img = ImageEnhance.Brightness(img).enhance(0.18)  
+            self._bg_photo = ImageTk.PhotoImage(img)          # guardar referencia
+            self.canvas.create_image(0, 0, anchor="nw", image=self._bg_photo)
+        except FileNotFoundError:
+            pass  
+
+    def dibujar_scanlines(self):
+        """
+        Una línea oscura cada 4 píxeles simula el efecto de una
+        pantalla de fósforo verde antigua
+        """
+        for y in range(0, WINDOW_H, 4):
+            self.canvas.create_line(
+                0, y, WINDOW_W, y,
+                fill=COLOR_SCANLINE,
+                width=1
+            )
+
 
 if __name__ == "__main__":
     app = MenuPrincipal()
