@@ -32,7 +32,10 @@ class MenuPrincipal(tk.Tk):
         self.cargar_fuentes()   
         self.crear_canvas()        
         self.dibujar_fondo()
-        self.dibujar_scanlines()     
+        self.dibujar_scanlines()
+        self.dibujar_marco_hud()    
+        self.dibujar_header()       
+        self.dibujar_titulo()     
 
 
     def configurar_ventana(self):
@@ -66,7 +69,7 @@ class MenuPrincipal(tk.Tk):
             width=WINDOW_W,
             height=WINDOW_H,
             bg=COLOR_BG,
-            highlightthickness=0   # sin borde gris de tkinter
+            highlightthickness=0   
         )
         self.canvas.pack(fill="both", expand=True)
 
@@ -95,6 +98,111 @@ class MenuPrincipal(tk.Tk):
                 fill=COLOR_SCANLINE,
                 width=1
             )
+
+    MARCO_MX = 180   # margen horizontal
+    MARCO_MY = 60    # margen vertical
+
+    def dibujar_marco_hud(self):
+        """
+        Dibuja el marco rectangular del HUD con esquinas decorativas.
+        """
+        mx, my = self.MARCO_MX, self.MARCO_MY
+        mw = WINDOW_W - mx * 2
+        mh = WINDOW_H - my * 2
+
+        # Rectángulo de fondo del HUD
+        self.canvas.create_rectangle(
+            mx, my, mx + mw, my + mh,
+            fill=COLOR_HUD_FILL,
+            outline=COLOR_GREEN,
+            width=1
+        )
+
+        # Esquinas decorativas: 4 vértices, cada uno con 2 líneas en L
+        corner_size = 12
+        vertices = [
+            (mx,      my,      +1, +1),   # superior-izquierda
+            (mx + mw, my,      -1, +1),   # superior-derecha
+            (mx,      my + mh, +1, -1),   # inferior-izquierda
+            (mx + mw, my + mh, -1, -1),   # inferior-derecha
+        ]
+        for (vx, vy, dx, dy) in vertices:
+            # Línea horizontal de la L
+            self.canvas.create_line(
+                vx, vy, vx + dx * corner_size, vy,
+                fill=COLOR_GREEN, width=2
+            )
+            # Línea vertical de la L
+            self.canvas.create_line(
+                vx, vy, vx, vy + dy * corner_size,
+                fill=COLOR_GREEN, width=2
+            )
+
+    def dibujar_header(self):
+        """
+        Dibuja el header del HUD con línea divisoria, etiquetas y punto de estado. 
+        """
+        mx, my = self.MARCO_MX, self.MARCO_MY
+
+        # Línea divisoria bajo el header
+        self.canvas.create_line(
+            mx, my + 38, WINDOW_W - mx, my + 38,
+            fill=COLOR_GREEN, width=1
+        )
+
+        # Etiqueta izquierda
+        self.canvas.create_text(
+            mx + 14, my + 19,
+            anchor="w",
+            text="TEC // PROYECTO 2",
+            fill=COLOR_GREEN_DIM,
+            font=self.f_tag
+        )
+
+        # Etiqueta derecha
+        self.canvas.create_text(
+            WINDOW_W - mx - 28, my + 19,
+            anchor="e",
+            text="SYSTEM ONLINE",
+            fill=COLOR_GREEN_DIM,
+            font=self.f_tag
+        )
+
+        # Punto de estado (se parpadea desde iniciar_animaciones)
+        self._status_dot = self.canvas.create_oval(
+            WINDOW_W - mx - 22, my + 12,
+            WINDOW_W - mx - 10, my + 24,
+            fill=COLOR_GREEN,
+            outline=""
+        )
+
+    def dibujar_titulo(self):
+        """
+        Dibuja el título principal y subtítulo centrados en la parte superior del HUD.
+        """
+        cx = WINDOW_W // 2
+
+        self.canvas.create_text(
+            cx, 162,
+            anchor="center",
+            text="RADAR 2D",
+            fill=COLOR_GREEN,
+            font=self.f_titulo
+        )
+
+        self.canvas.create_text(
+            cx, 196,
+            anchor="center",
+            text="SISTEMA DE DETECCIÓN Y SEGUIMIENTO",
+            fill=COLOR_GREEN_DIM,
+            font=self.f_subtitulo
+        )
+
+        # Separador decorativo bajo el título
+        self.canvas.create_line(
+            280, 212, WINDOW_W - 280, 212,
+            fill="#003318", width=1
+        )
 
 
 if __name__ == "__main__":
