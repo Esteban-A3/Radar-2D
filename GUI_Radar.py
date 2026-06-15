@@ -37,7 +37,9 @@ class MenuPrincipal(tk.Tk):
         self.dibujar_header()       
         self.dibujar_titulo()   
         self.dibujar_status_bar()
-        self.dibujar_botones()  
+        self.dibujar_botones()
+        self.dibujar_footer()  
+        self.iniciar_animaciones()
 
 
     def configurar_ventana(self):
@@ -165,7 +167,7 @@ class MenuPrincipal(tk.Tk):
         self.canvas.create_text(
             WINDOW_W - mx - 28, my + 19,
             anchor="e",
-            text="SYSTEM ONLINE",
+            text="SYSTEMA ONLINE",
             fill=COLOR_GREEN_DIM,
             font=self.f_tag
         )
@@ -330,6 +332,55 @@ class MenuPrincipal(tk.Tk):
             width=self.BTN_W,
             height=self.BTN_H
         )
+
+    def dibujar_footer(self):
+        """
+        Línea divisoria y tres campos de texto en la parte inferior
+        del marco HUD.
+        """
+        y_linea = WINDOW_H - self.MARCO_MY + 18   # justo sobre el borde inferior
+
+        self.canvas.create_line(
+            self.MARCO_MX, y_linea,
+            WINDOW_W - self.MARCO_MX, y_linea,
+            fill="#002210", width=1
+        )
+
+        campos_footer = [
+            (self.MARCO_MX + 14,       "w",      "I SEM 2026"),
+            (WINDOW_W // 2,            "center", "PROF. LEONARDO ARAYA"),
+            (WINDOW_W - self.MARCO_MX - 14, "e", "TEC // CR"),
+        ]
+        for (fx, anchor, texto) in campos_footer:
+            self.canvas.create_text(
+                fx, y_linea + 14,
+                anchor=anchor,
+                text=texto,
+                fill=COLOR_GREEN_DARK,
+                font=self.f_tag
+            )
+
+    def iniciar_animaciones(self):
+        """Arranca todos los loops de animación."""
+        self._dot_visible = True
+        self._animar_dot()
+
+    def _animar_dot(self):
+        """
+        Alterna la visibilidad del punto de estado cada 600 ms.
+        """
+        color = COLOR_GREEN if self._dot_visible else COLOR_HUD_FILL
+        self.canvas.itemconfig(self._status_dot, fill=color)
+        self._dot_visible = not self._dot_visible
+        self.after(600, self._animar_dot)
+
+    def _mostrar_feedback(self, mensaje: str, color: str = COLOR_GREEN):
+        """
+        Muestra un mensaje bajo los botones por 2.5 segundos.
+        """
+        self._lbl_feedback.config(text=mensaje, fg=color)
+        self.after(2500, lambda: self._lbl_feedback.config(text=""))
+
 
     #Botones del menú principal
 
