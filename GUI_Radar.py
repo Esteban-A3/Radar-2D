@@ -35,7 +35,8 @@ class MenuPrincipal(tk.Tk):
         self.dibujar_scanlines()
         self.dibujar_marco_hud()    
         self.dibujar_header()       
-        self.dibujar_titulo()     
+        self.dibujar_titulo()   
+        self.dibujar_status_bar()  
 
 
     def configurar_ventana(self):
@@ -193,7 +194,7 @@ class MenuPrincipal(tk.Tk):
         self.canvas.create_text(
             cx, 196,
             anchor="center",
-            text="SISTEMA DE DETECCIÓN Y SEGUIMIENTO",
+            text="SISTEMA DE DETECCIÓN",
             fill=COLOR_GREEN_DIM,
             font=self.f_subtitulo
         )
@@ -203,6 +204,42 @@ class MenuPrincipal(tk.Tk):
             280, 212, WINDOW_W - 280, 212,
             fill="#003318", width=1
         )
+
+    _ids_status: dict = {}
+
+    def dibujar_status_bar(self):
+        """
+        Tres campos de estado horizontales.
+        
+        """
+        cx = WINDOW_W // 2
+        campos = [
+            ("SENSOR", "ESPERANDO", -165),
+            ("SERIAL", "LISTO",     0),
+            ("GUI",    "ACTIVA",  165),
+        ]
+        for etiqueta, valor, offset_x in campos:
+            item_id = self.canvas.create_text(
+                cx + offset_x, 234,
+                anchor="center",
+                text=f"{etiqueta}: {valor}",
+                fill=COLOR_GREEN_MID,
+                font=self.f_status
+            )
+            self._ids_status[etiqueta] = item_id
+
+    def actualizar_status(self, campo: str, valor: str, color: str = COLOR_GREEN_MID):
+        """
+        API para que otros módulos 
+        actualicen los indicadores de estado en tiempo real.
+
+        """
+        if campo in self._ids_status:
+            self.canvas.itemconfig(
+                self._ids_status[campo],
+                text=f"{campo}: {valor}",
+                fill=color
+            )
 
 
 if __name__ == "__main__":
