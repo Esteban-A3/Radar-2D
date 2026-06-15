@@ -36,7 +36,8 @@ class MenuPrincipal(tk.Tk):
         self.dibujar_marco_hud()    
         self.dibujar_header()       
         self.dibujar_titulo()   
-        self.dibujar_status_bar()  
+        self.dibujar_status_bar()
+        self.dibujar_botones()  
 
 
     def configurar_ventana(self):
@@ -241,6 +242,108 @@ class MenuPrincipal(tk.Tk):
                 fill=color
             )
 
+    BTN_W      = 380
+    BTN_H      = 42
+    BTN_Y0     = 300   # y del primer botón
+    BTN_GAP    = 56    # separación entre botones
+
+    def dibujar_botones(self):
+        """
+        Crea los 2 botones del menú.
+        """
+        bx = (WINDOW_W - self.BTN_W) // 2  # x centrado
+
+        opciones_principales = [
+            ("01", "►  INICIAR ESCANEO", self._accion_iniciar),
+        ]
+
+        for i, (idx, texto, callback) in enumerate(opciones_principales):
+            by = self.BTN_Y0 + i * self.BTN_GAP
+            self._crear_boton_hud(
+                x=bx, y=by,
+                texto=f"  {idx}   {texto}",
+                callback=callback,
+                color_borde=COLOR_GREEN,
+                color_fg=COLOR_GREEN
+            )
+
+        # Separador visual antes del botón de salir
+        sep_y = self.BTN_Y0 + 1 * self.BTN_GAP - 8
+        self.canvas.create_line(
+            bx, sep_y, bx + self.BTN_W, sep_y,
+            fill="#002210", width=1
+        )
+
+        # Botón salir
+        by_salir = self.BTN_Y0 + 1 * self.BTN_GAP + 4
+        self._crear_boton_hud(
+            x=bx, y=by_salir,
+            texto="  02   ►  SALIR",
+            callback=self._accion_salir,
+            color_borde=COLOR_GREEN_DARK,
+            color_fg=COLOR_GREEN_DIM
+        )
+
+        # Label de feedback bajo los botones
+        self._lbl_feedback = tk.Label(
+            self.canvas,
+            text="",
+            font=self.f_feedback,
+            fg=COLOR_GREEN,
+            bg=COLOR_BG
+        )
+        feedback_y = self.BTN_Y0 + 2 * self.BTN_GAP + 14
+        self.canvas.create_window(WINDOW_W // 2, feedback_y,
+                                   window=self._lbl_feedback)
+
+    def _crear_boton_hud(self, x: int, y: int, texto: str,
+                          callback, color_borde: str, color_fg: str):
+        """
+        Factoría reutilizable para botones HUD.
+        """
+        frame = tk.Frame(
+            self.canvas,
+            bg=color_borde,    # el Frame actúa como borde de 1px
+            bd=0,
+            padx=1, pady=1
+        )
+        boton = tk.Button(
+            frame,
+            text=texto,
+            command=callback,
+            font=self.f_boton,
+            fg=color_fg,
+            bg=COLOR_HUD_FILL,
+            activeforeground=COLOR_BG,
+            activebackground=color_borde,
+            relief="flat",
+            bd=0,
+            anchor="w",
+            padx=10,
+            cursor="hand2"
+        )
+        boton.pack(fill="both", expand=True)
+        self.canvas.create_window(
+            x, y,
+            anchor="nw",
+            window=frame,
+            width=self.BTN_W,
+            height=self.BTN_H
+        )
+
+    #Botones del menú principal
+
+    def _accion_iniciar(self):
+        self._mostrar_feedback("[ CONECTANDO AL PUERTO SERIAL... ]")
+        # TODO : iniciar animaciones de escaneo y conexión serial
+
+    def _accion_salir(self):
+        self._mostrar_feedback("[ CERRANDO SISTEMA... ]", COLOR_RED_ALERT)
+        self.after(800, self.destroy)
+
+    def _mostrar_feedback(self, mensaje: str, color: str = COLOR_GREEN):
+        self._lbl_feedback.config(text=mensaje, fg=color)
+        self.after(2500, lambda: self._lbl_feedback.config(text=""))
 
 if __name__ == "__main__":
     app = MenuPrincipal()
