@@ -50,6 +50,7 @@ class RadarGUI(tk.Toplevel):
         self.dibujar_etiquetas_angulo()
         self.dibujar_etiquetas_distancia()
         self.dibujar_panel_lateral()
+        self.iniciar_barrido()
 
     def configurar_ventana(self):
         self.title("RADAR 2D — ESCANEO ACTIVO")
@@ -265,4 +266,95 @@ class RadarGUI(tk.Toplevel):
                     "distancia": id_dist,
                     "velocidad": id_vel
                 })
+
+
+    SWEEP_FADE_STEPS = 6    # cuántas líneas de estela
+    SWEEP_DELTA      = 2    # grados que avanza por frame en simulación
+    SWEEP_INTERVAL   = 30   # ms entre frames (≈33 fps)
+    
+    def iniciar_barrido(self):
+            """
+            Inicializa el ángulo de barrido y crea los elementos
+            de canvas para la línea y su estela.
+            El barrido va de 0° a 180° y vuelve (ping-pong),
+            igual que el servo físico.
+            """
+            self._angulo_actual  = 0.0    # ángulo en grados
+            self._direccion      = 1      # +1 = izq→der, -1 = der→izq
+    
+            # IDs de canvas de la estela (del más antiguo al más reciente)
+            self._sweep_estela = []
+            for i in range(self.SWEEP_FADE_STEPS):
+                linea = self.canvas.create_line(
+                    0, 0, 0, 0,
+                    fill=COLOR_HUD_FILL,   # invisible al inicio
+                    width=2
+                )
+                self._sweep_estela.append(linea)
+    
+            # Línea principal del barrido (la más brillante)
+            self._sweep_linea = self.canvas.create_line(
+                0, 0, 0, 0,
+                fill=COLOR_SWEEP,
+                width=2
+            )
+    
+            self._animar_barrido()
+    
+    def _angulo_a_xy(self, grados: float, radio: float):
+            """
+            Convierte un ángulo en grados a coordenadas (x, y)
+            sobre el canvas, dado un radio en píxeles desde el centro del radar.
+            """
+            rad = math.radians(grados)
+            x = self.RADAR_CX + radio * math.cos(rad)
+            y = self.RADAR_CY - radio * math.sin(rad)
+            return x, y
+    
+    def _animar_barrido(self):
+            """
+            Loop de animación de la línea de barrido.
+            """
+            cx, cy = self.RADAR_CX, self.RADAR_CY
+            r      = self.RADAR_R
+    
+            # Calcular posiciones de la estela (ángulos anteriores)
+            for i, linea_id in enumerate(self._sweep_estela):
+                # i=0 es la línea más antigua (más apagada)
+                offset_grados = (self.SWEEP_FADE_STEPS - i) * self.SWEEP_DELTA * 1.5
+                ang_estela = self._angulo_actual - self._direccion * offset_grados
+    
+                # Oscurecer progresivamente la estela
+                intensidad = int(255 * (i + 1) / (self.SWEEP_FADE_STEPS + 1))
+                verde_hex  = f"#{0:02x}{intensidad:02x}{0:02x}"
+    
+                if 0 <= ang_estela <= 180:
+                    ex, ey = self._angulo_a_xy(ang_estela, r)
+                    self.canvas.coords(linea_id, cx, cy, ex, ey)
+                    self.canvas.itemconfig(linea_id, fill=verde_hex)
+                else:
+                    # Fuera de rango: ocultar esa línea de estela
+                    self.canvas.coords(linea_id, cx, cy, cx, cy)
+    
+            # Dibujar línea principal
+            nx, ny = self._angulo_a_xy(self._angulo_actual, r)
+            self.canvas.coords(self._sweep_linea, cx, cy, nx, ny)
+    
+            # Avanzar ángulo (ping-pong entre 0° y 180°)
+            self._angulo_actual += self.SWEEP_DELTA * self._direccion
+            if self._angulo_actual >= 180:
+                self._angulo_actual = 180
+                self._direccion = -1
+            elif self._angulo_actual <= 0:
+                self._angulo_actual = 0
+                self._direccion = 1
+    
+            self.after(self.SWEEP_INTERVAL, self._animar_barrido)
+    
+    def actualizar_angulo(self, grados: float):
+            """
+            API para que el hilo serial
+            actualice el ángulo de la línea de barrido.
+            """
+            self._angulo_actual = max(0.0, min(180.0, grados))
     
