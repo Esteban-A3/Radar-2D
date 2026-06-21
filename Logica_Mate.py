@@ -147,3 +147,26 @@ class TrackerObjetos:
     def obtener_objetos_activos(self) -> dict:
         """Retorna una copia del diccionario de objetos activos."""
         return dict(self._objetos)
+
+
+GRAVEDAD_CM_S2 = 50.0   # aceleración constante en cm/s² (ajustable)
+
+def predecir_trayectoria(x0: float, y0: float, vx: float, vy: float,
+                          n_puntos: int = 15, dt: float = 0.15,
+                          g: float = GRAVEDAD_CM_S2) -> list[tuple[float, float]]:
+    """
+    Genera una lista de puntos futuros siguiendo una trayectoria
+    parabólica simple, a partir de la posición y velocidad actuales.
+
+    Nota sobre el signo de g: en este sistema de coordenadas,
+    "y" positivo se aleja del sensor en el sentido de la rejilla
+    angular. Se suma 0.5*g*t² para que la
+    curva se doble, simulando una parábola.
+    """
+    puntos = []
+    for i in range(n_puntos):
+        t = i * dt
+        x = x0 + vx * t
+        y = y0 + vy * t + 0.5 * g * t ** 2
+        puntos.append((x, y))
+    return puntos
