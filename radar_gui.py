@@ -489,4 +489,54 @@ class RadarGUI(tk.Toplevel):
         self.canvas.itemconfig(slot["angulo"],    text="ANG:  ---°",    fill=COLOR_GREEN_DARK)
         self.canvas.itemconfig(slot["distancia"], text="DIST: --- cm",  fill=COLOR_GREEN_DARK)
         self.canvas.itemconfig(slot["velocidad"], text="VEL:  --- cm/s",fill=COLOR_GREEN_DARK)
+
+    PRED_PASOS   = 20     # puntos de la trayectoria predicha
+    PRED_DT      = 0.15   # segundos entre puntos predichos
+    PRED_G       = 30.0   # gravedad escalada en px/s² (ajustable)
+
+    def dibujar_trayectoria(self, obj_id: int, vx_cms: float, vy_cms: float):
+            """
+            Dibuja la trayectoria parabólica predicha para un objeto.
+            """
+            if obj_id not in self._objetos:
+                return
     
+            datos      = self._objetos[obj_id]
+            x0, y0     = datos["x"], datos["y"]
+            escala     = self.RADAR_R / self.RADAR_MAX_DIST   # px por cm
+    
+            # Velocidades en px/s
+            vx_px = vx_cms * escala
+            vy_px = vy_cms * escala
+    
+            # Generar puntos de la trayectoria
+            puntos = []
+            for paso in range(self.PRED_PASOS):
+                t  = paso * self.PRED_DT
+                px = x0 + vx_px * t
+                # y positivo hacia abajo en canvas → gravedad suma
+                py = y0 + vy_px * t + 0.5 * self.PRED_G * t ** 2
+                puntos.append((px, py))
+    
+            # Clave del canvas item de la trayectoria
+            key_pred = f"pred_{obj_id}"
+    
+            if key_pred not in self._puntos_canvas.get(obj_id, {}):
+                # Crear la línea punteada de predicción
+                coords_flat = [c for p in puntos for c in p]
+                linea_pred = self.canvas.create_line(
+                    *coords_flat,
+                    fill=COLOR_PREDICT,
+                    width=1,
+                    dash=(4, 4)    # patrón punteado: 4px línea, 4px hueco
+                )
+                if obj_id not in self._puntos_canvas:
+                    self._puntos_canvas[obj_id] = {}
+                self._puntos_canvas[obj_id][key_pred] = linea_pred
+            else:
+                # Actualizar coordenadas de la línea existente
+                coords_flat = [c for p in puntos for c in p]
+                self.canvas.coords(
+                    self._puntos_canvas[obj_id][key_pred],
+                    *coords_flat
+                )
