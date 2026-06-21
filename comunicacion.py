@@ -113,3 +113,15 @@ class LectorSerial:
         if self.conexion is not None:
             self.conexion.close()
             print("[Serial] Puerto serial cerrado correctamente.")
+
+    def obtener_lecturas_pendientes(self) -> list[tuple[int, int, float]]:
+        """
+        Extrae todas las lecturas acumuladas en la cola sin bloquear.
+        """
+        lecturas = []
+        while True:
+            try:
+                lecturas.append(self.cola_lecturas.get_nowait())
+            except queue.Empty:
+                break
+        return lecturas
