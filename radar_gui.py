@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import font as tkfont
+import math
 
 # Colores del menu y HUD
 COLOR_BG         = "#000000"
@@ -44,6 +45,11 @@ class RadarGUI(tk.Toplevel):
         self.cargar_fuentes()
         self.crear_canvas()
         self.dibujar_fondo_base()
+        self.dibujar_anillos()
+        self.dibujar_rejilla_angular()
+        self.dibujar_etiquetas_angulo()
+        self.dibujar_etiquetas_distancia()
+        self.dibujar_panel_lateral()
 
     def configurar_ventana(self):
         self.title("RADAR 2D — ESCANEO ACTIVO")
@@ -118,4 +124,145 @@ class RadarGUI(tk.Toplevel):
             cx - 4, cy - 4, cx + 4, cy + 4,
             fill=COLOR_GREEN, outline=""
         )
-        
+
+    NUM_ANILLOS = 4
+    
+    def dibujar_anillos(self):
+            """
+            Dibuja NUM_ANILLOS círculos concéntricos equidistantes.
+            Cada anillo representa un porcentaje del rango máximo.
+            """
+            cx, cy, r = self.RADAR_CX, self.RADAR_CY, self.RADAR_R
+            for i in range(1, self.NUM_ANILLOS + 1):
+                radio = r * i / self.NUM_ANILLOS
+                self.canvas.create_oval(
+                    cx - radio, cy - radio,
+                    cx + radio, cy + radio,
+                    outline=COLOR_RING,
+                    width=1
+                )
+    
+    def dibujar_rejilla_angular(self):
+            """
+            Dibuja líneas desde el centro hacia el borde del radar
+            cada 30°, formando la rejilla polar.
+            Los ángulos van de 0° a 180° (barrido del servo).
+            """
+            cx, cy, r = self.RADAR_CX, self.RADAR_CY, self.RADAR_R
+            for grados in range(0, 181, 30):
+                rad = math.radians(grados)
+                # Para un radar 2D con barrido de 180°,
+                # 0° es la izquierda y 180° la derecha (eje horizontal)
+                x = cx + r * math.cos(rad)
+                y = cy - r * math.sin(rad)   # y invertida (canvas crece hacia abajo)
+                self.canvas.create_line(
+                    cx, cy, x, y,
+                    fill=COLOR_GRID, width=1
+                )
+
+    def dibujar_etiquetas_angulo(self):
+            """
+            Coloca la etiqueta de grados justo fuera del círculo
+            en cada línea de la rejilla (cada 30°).
+            """
+            cx, cy, r = self.RADAR_CX, self.RADAR_CY, self.RADAR_R
+            offset = 16   # píxeles fuera del borde del círculo
+    
+            for grados in range(0, 181, 30):
+                rad = math.radians(grados)
+                x = cx + (r + offset) * math.cos(rad)
+                y = cy - (r + offset) * math.sin(rad)
+                self.canvas.create_text(
+                    x, y,
+                    text=f"{grados}°",
+                    fill=COLOR_GREEN_DIM,
+                    font=self.f_tag,
+                    anchor="center"
+                )
+    
+    def dibujar_etiquetas_distancia(self):
+            """
+            Coloca la distancia en cm sobre el eje vertical (90°)
+            en cada anillo concéntrico.
+            """
+            cx, cy, r = self.RADAR_CX, self.RADAR_CY, self.RADAR_R
+            for i in range(1, self.NUM_ANILLOS + 1):
+                radio   = r * i / self.NUM_ANILLOS
+                dist_cm = int(self.RADAR_MAX_DIST * i / self.NUM_ANILLOS)
+                # El eje de 90° apunta hacia arriba en el canvas
+                y_label = cy - radio + 10
+                self.canvas.create_text(
+                    cx + 4, y_label,
+                    text=f"{dist_cm}cm",
+                    fill=COLOR_GREEN_DARK,
+                    font=self.f_tag,
+                    anchor="w"
+                )
+    
+    def dibujar_panel_lateral(self):
+            """
+            Panel HUD a la derecha del radar.
+            Contiene el título y los slots de información de objetos.
+            """
+            px = self.PANEL_X + 18
+            self.canvas.create_text(
+                px, 60,
+                anchor="nw",
+                text="OBJETOS DETECTADOS",
+                fill=COLOR_GREEN,
+                font=self.f_titulo
+            )
+            self.canvas.create_line(
+                self.PANEL_X + 10, 82,
+                WINDOW_W - 10, 82,
+                fill=COLOR_GREEN_DARK, width=1
+            )
+    
+            # Slots para hasta 5 objetos simultáneos
+            # Cada slot tiene: ID, ángulo, distancia, velocidad
+            self._slots_ids = []    # IDs de canvas de los textos de cada slot
+            MAX_OBJETOS = 5
+            slot_h = 90             # altura de cada slot en píxeles
+    
+            for i in range(MAX_OBJETOS):
+                y0 = 95 + i * slot_h
+    
+                # Número de objeto
+                self.canvas.create_text(
+                    px, y0,
+                    anchor="nw",
+                    text=f"OBJ-{i+1:02d}",
+                    fill=COLOR_GREEN_DARK,
+                    font=self.f_tag
+                )
+    
+                # Línea de datos (se actualiza en paso 5)
+                id_ang  = self.canvas.create_text(
+                    px, y0 + 16,
+                    anchor="nw", text="ANG:  ---°",
+                    fill=COLOR_GREEN_DIM, font=self.f_dato
+                )
+                id_dist = self.canvas.create_text(
+                    px, y0 + 33,
+                    anchor="nw", text="DIST: --- cm",
+                    fill=COLOR_GREEN_DIM, font=self.f_dato
+                )
+                id_vel  = self.canvas.create_text(
+                    px, y0 + 50,
+                    anchor="nw", text="VEL:  --- cm/s",
+                    fill=COLOR_GREEN_MID, font=self.f_dato
+                )
+    
+                # Separador entre slots
+                self.canvas.create_line(
+                    self.PANEL_X + 10, y0 + 68,
+                    WINDOW_W - 10, y0 + 68,
+                    fill=COLOR_GREEN_DARK, width=1
+                )
+    
+                self._slots_ids.append({
+                    "angulo":    id_ang,
+                    "distancia": id_dist,
+                    "velocidad": id_vel
+                })
+    
