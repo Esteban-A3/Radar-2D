@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import font as tkfont
 import math
+import time
 
 # Colores del menu y HUD
 COLOR_BG         = "#000000"
@@ -51,6 +52,7 @@ class RadarGUI(tk.Toplevel):
         self.dibujar_etiquetas_distancia()
         self.dibujar_panel_lateral()
         self.iniciar_barrido()
+        self.inicializar_objetos()
 
     def configurar_ventana(self):
         self.title("RADAR 2D — ESCANEO ACTIVO")
@@ -357,4 +359,134 @@ class RadarGUI(tk.Toplevel):
             actualice el ángulo de la línea de barrido.
             """
             self._angulo_actual = max(0.0, min(180.0, grados))
+
+    OBJETO_RADIO    = 5      # radio visual del punto de objeto en px
+    OBJETO_TIMEOUT  = 3.0    # segundos sin update antes de ocultar el objeto
+
+    def inicializar_objetos(self):
+        """
+        Prepara el diccionario de objetos activos y sus
+        elementos de canvas (punto + etiquetas).
+        """
+        
+        self._objetos = {}
+
+        # Reservar un objeto de canvas por slot para reusarlos
+        self._puntos_canvas = {}
+
+        # Arrancar el loop de limpieza de objetos perdidos
+        self.limpiar_objetos_perdidos()
+
+    def renderizar_objeto(self, obj_id: int, angulo: float,
+                           distancia: float, velocidad: float):
+        """
+        Dibuja o actualiza la posición de un objeto detectado.
+        """
+        # Escalar distancia de cm a píxeles
+        r_px = (distancia / self.RADAR_MAX_DIST) * self.RADAR_R
+        r_px = min(r_px, self.RADAR_R)   # no salir del círculo
+
+        x, y = self._angulo_a_xy(angulo, r_px)
+
+        
+        if obj_id not in self._puntos_canvas:
+            # Primera vez que aparece este objeto: crear elementos
+            punto = self.canvas.create_oval(
+                x - self.OBJETO_RADIO, y - self.OBJETO_RADIO,
+                x + self.OBJETO_RADIO, y + self.OBJETO_RADIO,
+                fill=COLOR_OBJECT, outline=COLOR_GREEN, width=1
+            )
+            # Cruz de targeting alrededor del punto
+            cruz_h = self.canvas.create_line(
+                x - 10, y, x + 10, y,
+                fill=COLOR_GREEN, width=1
+            )
+            cruz_v = self.canvas.create_line(
+                x, y - 10, x, y + 10,
+                fill=COLOR_GREEN, width=1
+            )
+            self._puntos_canvas[obj_id] = {
+                "punto": punto,
+                "cruz_h": cruz_h,
+                "cruz_v": cruz_v,
+            }
+        else:
+            # Actualizar posición de los elementos existentes
+            ids = self._puntos_canvas[obj_id]
+            self.canvas.coords(
+                ids["punto"],
+                x - self.OBJETO_RADIO, y - self.OBJETO_RADIO,
+                x + self.OBJETO_RADIO, y + self.OBJETO_RADIO
+            )
+            self.canvas.coords(ids["cruz_h"], x - 10, y, x + 10, y)
+            self.canvas.coords(ids["cruz_v"], x, y - 10, x, y + 10)
+
+       
+        self._objetos[obj_id] = {
+            "angulo":    angulo,
+            "distancia": distancia,
+            "velocidad": velocidad,
+            "x": x, "y": y,
+            "ultimo_update": time.time()
+        }
+
+      
+        self.actualizar_panel(obj_id)
+
+    def limpiar_objetos_perdidos(self):
+        """
+        Oculta los objetos que llevan más de OBJETO_TIMEOUT
+        segundos sin recibir una nueva lectura.
+        """
+        ahora = time.time()
+        for obj_id, datos in list(self._objetos.items()):
+            if ahora - datos["ultimo_update"] > self.OBJETO_TIMEOUT:
+                # Ocultar el punto del canvas
+                if obj_id in self._puntos_canvas:
+                    ids = self._puntos_canvas[obj_id]
+                    for key in ids:
+                        self.canvas.coords(ids[key], 0, 0, 0, 0)
+                del self._objetos[obj_id]
+                # Limpiar el slot del panel lateral
+                slot_idx = (obj_id - 1) % len(self._slots_ids)
+                self._limpiar_slot(slot_idx)
+
+        self.after(500, self._limpiar_objetos_perdidos)
+
+    def actualizar_panel(self, obj_id: int):
+        """
+        Actualiza el slot del panel lateral con los datos
+        actuales del objeto identificado por obj_id.
+        """
+        if obj_id not in self._objetos:
+            return
+
+        datos    = self._objetos[obj_id]
+        slot_idx = (obj_id - 1) % len(self._slots_ids)
+        slot     = self._slots_ids[slot_idx]
+
+        self.canvas.itemconfig(
+            slot["angulo"],
+            text=f"ANG:  {datos['angulo']:.1f}°",
+            fill=COLOR_GREEN
+        )
+        self.canvas.itemconfig(
+            slot["distancia"],
+            text=f"DIST: {datos['distancia']:.1f} cm",
+            fill=COLOR_GREEN
+        )
+        self.canvas.itemconfig(
+            slot["velocidad"],
+            text=f"VEL:  {datos['velocidad']:.1f} cm/s",
+            fill=COLOR_GREEN_MID
+        )
+
+    def limpiar_slot(self, slot_idx: int):
+        """Resetea un slot del panel lateral a su estado vacío."""
+        if slot_idx >= len(self._slots_ids):
+            return
+        slot = self._slots_ids[slot_idx]
+        self.canvas.itemconfig(slot["angulo"],    text="ANG:  ---°",    fill=COLOR_GREEN_DARK)
+        self.canvas.itemconfig(slot["distancia"], text="DIST: --- cm",  fill=COLOR_GREEN_DARK)
+        self.canvas.itemconfig(slot["velocidad"], text="VEL:  --- cm/s",fill=COLOR_GREEN_DARK)
     
