@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import font as tkfont
 from PIL import Image, ImageTk, ImageEnhance
 import os
-
+from detector_puerto import detectar_puerto_arduino_detallado
+from radar_gui import RadarGUI
 
 COLOR_BG         = "#000000"   # negro puro 
 COLOR_GREEN      = "#00FF46"   # verde radar 
@@ -381,12 +382,53 @@ class MenuPrincipal(tk.Tk):
         self._lbl_feedback.config(text=mensaje, fg=color)
         self.after(2500, lambda: self._lbl_feedback.config(text=""))
 
-
-    #Botones del menú principal
-
     def _accion_iniciar(self):
-        self._mostrar_feedback("[ CONECTANDO AL PUERTO SERIAL... ]")
-        # TODO : iniciar animaciones de escaneo y conexión serial
+        """
+        Detecta automáticamente el puerto del Arduino, abre la
+        ventana del radar y oculta el menú principal mientras
+        el radar está activo. Si no se detecta ningún Arduino,
+        el radar igual se abre pero en modo visual (sin datos
+        reales), y se le avisa al usuario por la barra de estado.
+        """
+        self.actualizar_status("SENSOR", "BUSCANDO...", COLOR_GREEN_MID)
+        self._mostrar_feedback("[ BUSCANDO ARDUINO... ]")
+
+        info_puerto = detectar_puerto_arduino_detallado()
+
+        if info_puerto["encontrado"]:
+            puerto = info_puerto["puerto"]
+            self.actualizar_status("SENSOR", "CONECTADO", COLOR_GREEN)
+            self.actualizar_status("SERIAL", puerto, COLOR_GREEN)
+            self._mostrar_feedback(f"[ ARDUINO DETECTADO EN {puerto} ]")
+        else:
+            puerto = None
+            self.actualizar_status("SENSOR", "NO DETECTADO", COLOR_RED_ALERT)
+            self._mostrar_feedback(
+                "[ ARDUINO NO DETECTADO — MODO VISUAL ]", COLOR_RED_ALERT
+            )
+
+        # Pequeña pausa para que el usuario alcance a leer el feedback
+        self.after(1200, lambda: self._abrir_radar(puerto))
+
+    def _abrir_radar(self, puerto):
+        """
+        Oculta el menú principal y abre la ventana del radar.
+        """
+        self.withdraw()   # oculta el menú sin destruirlo
+
+        ventana_radar = RadarGUI(master=self, puerto=puerto)
+
+        ventana_radar.bind("<Destroy>", self._on_radar_cerrado)
+
+    def _on_radar_cerrado(self, event):
+        """
+        Vuelve a mostrar el menú principal cuando se cierra la
+        ventana del radar.
+        """
+        if event.widget == event.widget.winfo_toplevel():
+            self.deiconify()
+            self.actualizar_status("SENSOR", "ESPERANDO", COLOR_GREEN_MID)
+            self.actualizar_status("SERIAL", "LISTO", COLOR_GREEN_MID)
 
     def _accion_salir(self):
         self._mostrar_feedback("[ CERRANDO SISTEMA... ]", COLOR_RED_ALERT)
