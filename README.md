@@ -12,7 +12,23 @@ Este módulo contiene la aplicación de interfaz gráfica desarrollada en Python
 | `leer_radar.py` | Herramienta de prueba para verificar la recepción correcta de datos desde Arduino mediante comunicación serial.                                 |
 | `README.md`     | Documentación de la rama.                                                                                                                       |
 
-
+---
+✨ Características
+📡 Visualización en Tiempo Real
+Representación gráfica del barrido entre 0° y 180°.
+Actualización continua de los datos recibidos desde Arduino.
+Movimiento sincronizado con el servomotor.
+🎯 Detección de Objetos
+Muestra la ubicación de obstáculos detectados.
+Conversión automática de ángulo y distancia a coordenadas 2D.
+Actualización dinámica de los puntos detectados.
+⚠️ Sistema de Alertas
+Indicadores visuales cuando un objeto entra dentro del rango de detección definido.
+Retroalimentación inmediata para el usuario.
+🖥️ Interfaz Intuitiva
+Construida completamente con Tkinter.
+Uso del componente Canvas para el renderizado gráfico.
+Diseño ligero y fácil de ejecutar en cualquier equipo con Python.
 ---
 
 ## 🛠️ Características de la Interfaz
@@ -36,3 +52,12 @@ La GUI está diseñada con Tkinter para ofrecer una representación visual limpi
 4. Una vez verificada la lectura serial, inicia la aplicación principal:
    ```bash
    python GUI_Radar.py
+🔗 Relación con el Proyecto
+
+Esta rama forma parte del proyecto Radar-2D, integrando la comunicación serial proveniente del microcontrolador Arduino con una representación gráfica interactiva que permite visualizar el entorno detectado por el sensor.
+
+📸 Vista General
+Barrido de radar de 0° a 180°.
+Detección de obstáculos en tiempo real.
+Comunicación serial con Arduino.
+Interfaz desarrollada en Python + Tkinter.
