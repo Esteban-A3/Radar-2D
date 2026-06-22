@@ -10,7 +10,7 @@
 
 ---
 
-## 📖 Descripción
+## Descripción
 
 Radar 2D es un sistema de detección de objetos en tiempo real que combina hardware y software.
 Un sensor ultrasónico HC-SR04 montado sobre un servomotor realiza barridos de 0° a 180°,
