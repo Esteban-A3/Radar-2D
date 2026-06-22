@@ -3,11 +3,14 @@
 Este módulo contiene la aplicación de interfaz gráfica desarrollada en Python utilizando **Tkinter** para visualizar en tiempo real los datos capturados por el radar Arduino (barrido, distancias y alertas).
 
 ---
+📂 Contenido de la Rama
 
-## 📂 Contenido de esta Rama
-
-* **`GUI_Radar.py`**: Script principal en Python que genera la interfaz gráfica con **Tkinter**, maneja la animación del radar en el Canvas y procesa el feedback visual de las acciones.
-* **`leer_radar.py`**: Script de prueba (test) independiente para verificar y asegurar que los datos del puerto serial se están recibiendo y leyendo correctamente desde el Arduino.
+| Archivo         | Descripción                                                                                                                                     |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GUI_Radar.py`  | Aplicación principal de la interfaz gráfica. Procesa los datos recibidos por el puerto serial y representa visualmente el radar en tiempo real. |
+| `radar_gui.py`  | Versión alternativa o experimental de la interfaz utilizada durante el desarrollo del proyecto.                                                 |
+| `leer_radar.py` | Herramienta de prueba para verificar la recepción correcta de datos desde Arduino mediante comunicación serial.                                 |
+| `README.md`     | Documentación de la rama.                                                                                                                       |
 
 
 ---
