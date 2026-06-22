@@ -1,4 +1,4 @@
-# 📡 Radar 2D — Sistema de Detección de Objetos
+# Radar 2D — Sistema de Detección de Objetos
 
 > Proyecto 2 — Fundamentos de Sistemas Computacionales | ITCR | I Semestre 2026
 
@@ -20,7 +20,7 @@ trayectoria futura.
 
 ---
 
-## 🗂️ Estructura del Repositorio
+## Estructura del main
 
 ```
 Radar-2D/
@@ -38,16 +38,16 @@ Radar-2D/
 
 ---
 
-## 🌿 Branches
+## Archivos Contenidos
 
-| Branch | Contenido |
+| Archivo | Contenido |
 |--------|-----------|
 | `main` | Código completo y funcional (Python + Arduino) |
 | `archivos_adicionales` | Documentación, diagramas y figuras |
 
 ---
 
-## ⚙️ Lista de Materiales
+## Lista de Materiales
 
 | Componente | Cantidad |
 |------------|----------|
@@ -60,7 +60,7 @@ Radar-2D/
 
 ---
 
-## 🔌 Diagrama de Conexiones
+## Diagrama de Conexiones
 
 | Componente | Pin componente | Pin Arduino |
 |------------|---------------|-------------|
@@ -78,7 +78,7 @@ Radar-2D/
 
 ---
 
-## 🚀 Instalación y Ejecución
+## Instalación y Ejecución
 
 ### Requisitos
 
@@ -106,7 +106,7 @@ python radar_2d.py
 
 ---
 
-## 🖥️ Funcionalidades del Sistema
+## Funcionalidades del Sistema
 
 ### Hardware (Arduino)
 - Barrido continuo de **0° a 180°** en pasos de 2°, ida y vuelta
@@ -117,16 +117,16 @@ python radar_2d.py
 ### Software (Python / Tkinter)
 | Función | Descripción |
 |---------|-------------|
-| 📍 Posición en tiempo real | Conversión polar → cartesiana y representación en canvas radar |
-| 🏃 Velocidad del objeto | Cálculo usando `v = d/t` entre lecturas consecutivas |
-| 🎯 Tracker multi-objeto | Asociación por distancia euclidiana mínima con umbral de 15 cm |
-| 📈 Predicción de trayectoria | Movimiento parabólico: `y(t) = y₀ + vy·t + 0.5·g·t²` |
-| 🔍 Detección automática | Escaneo automático del puerto COM del Arduino al iniciar |
-| 🧵 Lectura no bloqueante | Hilo daemon + `queue.Queue` para no congelar la GUI |
+| Posición en tiempo real | Conversión polar → cartesiana y representación en canvas radar |
+| Velocidad del objeto | Cálculo usando `v = d/t` entre lecturas consecutivas |
+| Tracker multi-objeto | Asociación por distancia euclidiana mínima con umbral de 15 cm |
+| Predicción de trayectoria | Movimiento parabólico: `y(t) = y₀ + vy·t + 0.5·g·t²` |
+| Detección automática | Escaneo automático del puerto COM del Arduino al iniciar |
+| Lectura no bloqueante | Hilo daemon + `queue.Queue` para no congelar la GUI |
 
 ---
 
-## 📐 Arquitectura del Sistema
+## Arquitectura del Sistema
 
 ```
 [HC-SR04]──┐
@@ -139,13 +139,13 @@ python radar_2d.py
 
 ---
 
-## 📸 Capturas del Sistema
+## Capturas del Sistema
 
 > *(Agregar fotos de la maqueta y la GUI aquí)*
 
 ---
 
-## 📄 Documentación
+## Documentación
 
 | Documento | Descripción |
 |-----------|-------------|
@@ -154,7 +154,7 @@ python radar_2d.py
 
 ---
 
-## 👥 Autores
+## Autores
 
 **Esteban Alejandro Sánchez Ledezma** — ITCR, Fundamentos de Sistemas Computacionales, 2026  
 **Dominick Robles** — ITCR, Fundamentos de Sistemas Computacionales, 2026
